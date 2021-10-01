@@ -1,3 +1,11 @@
+# Modification for Punch Hardware
+Note: this is a quick and duty solution. Will update to add a Web Server for configuration similiar to
+https://github.com/jeelabs/esp-link (currently it only support ESP8266 mcu) - wait or spend time to port it.
+=====================================
+192.168.4.1:8885  <-> COM2 (default)
+
+
+((((((((((((((((( Original )))))))))))))))))
 # ESP32-Serial-Bridge
 
 Transparent WiFi (TCP) to all three UART Bridge, supports both AP and STATION WiFi modes. The .ino file is the code for the ESP32. Use Arduino IDE for ESP32 to compile and upload it to the ESP32.
@@ -20,11 +28,8 @@ https://github.com/espressif/arduino-esp32
 
 ===============================================================
 
-In some cases the memorylayout is to small for this scetch.
-If you face this problem you can either disable Bluetooth by removing
-#define BLUETOOTH
-in config.h 
-or change the partition size as described here:
+In some cases the memorylayout is to small for this scetch,
+change the partition size as described here:
 https://desire.giesecke.tk/index.php/2018/04/20/change-partition-size-arduino-ide/
 
 Arduino hardware configuration:
@@ -32,12 +37,6 @@ Arduino hardware configuration:
 https://github.com/AlphaLima/ESP32-Serial-Bridge/blob/master/Settings.jpg
 
 ===============================================================
-
-example usecases:
-
-https://www.youtube.com/watch?v=K2Hia06IMtk
-
-https://www.youtube.com/watch?v=GoSxlQvuAhg
 
 # Hardware
 here is the wiring diagram recomendation:
@@ -53,8 +52,6 @@ COM2 Tx <-> GPIO04
 NOTE: The PIN assignment has changed and may not look straigt forward (other PINs are marke as Rx/Tx), but this assignment allows to flash via USB also with hooked MAX3232 serial drivers.
 
 I recomend to start your project with a Node32s or compatible evaluation board. For a TTL to RS232 level conversion search google for "TTL RS3232 Converter"
-
-
 
 https://tech.scargill.net/wp-content/uploads/2017/05/ESP326.jpg
 
