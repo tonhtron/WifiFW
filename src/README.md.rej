@@ -1,0 +1,9 @@
+diff a/PunchWifiSerial/README.md b/PunchWifiSerial/README.md	(rejected hunks)
+@@ -0,6 +0,7 @@
+ 192.168.4.1:8880  <-> COM0                                     
+ 192.168.4.1:8881  <-> COM1                                     
+ 192.168.4.1:8882  <-> COM2                                     
++
+ ===============================================================
+ 
+ Used Libraries: (must be installed in the arduino IDE):
