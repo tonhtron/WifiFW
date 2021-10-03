@@ -2,10 +2,9 @@
 // by AlphaLima
 // modified by Thanh Truong 9/26/2021
 //  * remove BlueTooth
+//  * major rework (2Server<-->2UART at 3client/Server(uart))
 
-// Disclaimer: Don't use  for life support systems
-// or any other situations where system failure may affect
-// user or environmental safety.
+
 
 #include "config.h"
 #include <esp_wifi.h>
@@ -20,7 +19,6 @@
 HardwareSerial Serial_1(1); //COM1 - debug output
 HardwareSerial* pCOM[NUM_COM] = {&Serial, &Serial_1};
 
-#define MAX_NMEA_CLIENTS 4
 #include <WiFiClient.h>
 WiFiServer server_0(SERIAL0_TCP_PORT);
 WiFiServer server_1(SERIAL1_TCP_PORT);
@@ -116,9 +114,10 @@ void loop()
   //======= check TCP client connection =====
   for (int num = 0; num < NUM_COM ; num++)
   {
+    byte i=0;
     if (pServer[num]->hasClient())
     {
-      for (byte i = 0; i < MAX_NMEA_CLIENTS; i++) {
+      for (i = 0; i < MAX_NMEA_CLIENTS; i++) {
         //find free/disconnected spot
         if (!TCPClient[num][i] || !TCPClient[num][i].connected()) {
           if (TCPClient[num][i])
@@ -127,22 +126,23 @@ void loop()
           if (debug) {
             Serial_1.print("New client for Server ");
             Serial_1.print(num);
-            Serial_1.print("  COM ");
+            Serial_1.print("  Slot ");
             Serial_1.println(i);
           }
-          break;//continue;
+          break;
         }
         else{
           if (debug){
             Serial_1.print("Client slot accupied Server ");
             Serial_1.print(num);
-            Serial_1.print("  COM ");
+            Serial_1.print("  Slot ");
             Serial_1.println(i);
           }
         }
       }
+      if(i>=MAX_NMEA_CLIENTS)
+        Serial_1.print("No slot available for new Client - rejected ");
       //no free/disconnected spot so reject
-      Serial_1.println("Reject - no slot");
       WiFiClient TmpserverClient = pServer[num]->available();
       TmpserverClient.stop();
     }
