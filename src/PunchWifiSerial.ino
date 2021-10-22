@@ -52,6 +52,22 @@ void print_wifi_error() {
 	}
 }
 
+bool connectToServer()
+{
+	if(WiFi.status()!=WL_CONNECTED){
+		return false;
+	}
+	Serial.printf("Connecting to server(timeout in %d sec): ip=",DEF_CONNECT_TIMEOUT); Serial.print(ipServer);
+	Serial.printf(" port=%d\r\n", portServer);
+	if (!client.connect(ipServer, portServer, DEF_CONNECT_TIMEOUT)) {
+		Serial.println("Connection to server failed.");
+		Serial.println("You can send ID_SETENABLEWIFI message to reset");
+		return false;
+	}
+	Serial.println("Connect to server ok.");
+	return true;
+}
+
 //
 //********************* SETUP ****************************************
 //
@@ -94,7 +110,8 @@ void setup() {
 			// Sorry but wifi is not available 
 			Serial.println("\n");
 			Serial.println("Impossible to establish WiFi connection.");
-
+		Serial.println("...accepting messages from main mcu...");
+		return;
 			print_wifi_error();
 			Serial.println("Sleep a little and retry later, bye.");
 
@@ -107,22 +124,16 @@ void setup() {
 	Serial.println();
 	Serial.printf("Connected to network, my IP address: "); Serial.println(WiFi.localIP());
 
-	Serial.print("Connecting to server: ip="); Serial.print(ipServer);
-	Serial.printf(" port=%d\r\n", portServer);
-	if (!client.connect(ipServer, portServer, 12000)) {
-		Serial.println("Connection to server failed.");
-		Serial.println("...accepting messages from main mcu(USB)...");
-		delay(1000);
-		return;
+	if(!connectToServer()){
+		Serial.println("...accepting messages from main mcu(USB)-no pass thru...");
+		return;//put into usart rev msg mode-no passthru.
 	}
-
-	Serial.println("Connect as client ok.");
+	wasconnected = true;
 	Serial.println("======================================================");
 	Serial.println("Test COM1 or Serial.println: Data Transfer");
 	Serial.println("** This terminal act like a Punch MCU talking to Wifi module **");
 	Serial.println("Terminal (MCU) <---> WifiModule/Brigde <---> Wifi Client");
-	Serial.println("===== Waiting for Wifi/TCP connection/data <--> =====");
-	Serial.println("Punch UART  <--> Wifi");
+	Serial.println("************** Punch UART  <-->  Wifi **************"); 
 	//esp_err_t esp_wifi_set_max_tx_power(50);  //lower WiFi Power
 
   //====================== OTA setup ======================================
@@ -179,6 +190,7 @@ bool ExecMessage(uint8_t* pMsg)
 		preferences.end();
 		//
 		Serial.printf("   SET_AP_SSID: %s\r\n",ssid.c_str());
+		Serial.println("Will take affect on next reset.");
 		break;
 	case ID_WIFI_SET_REMOTE_AP_PW :
 		pMsg[3+25]=0;
@@ -192,6 +204,7 @@ bool ExecMessage(uint8_t* pMsg)
 		preferences.end();
 		//
 		Serial.printf("   SET_AP_PW: %s\r\n",password.c_str());
+		Serial.println("Will take affect on next reset.");
 		break;
 	case ID_WIFI_SET_IP_PORT:
 		ipServer = *(uint32_t*)&pMsg[3];
@@ -207,7 +220,7 @@ bool ExecMessage(uint8_t* pMsg)
 		//
 		Serial.printf("   SET_IP_PORT: port= %u  ip=",portServer);
 		Serial.println(ipServer);
-		Serial.println("Please reset the hardawre.");
+		Serial.println("Will take affect on next reset.");
 		break;
 	case ID_WIFI_ENABLE:{
 		//if(enableWifi == *(uint8_t*)&pMsg[3])
@@ -228,6 +241,14 @@ bool ExecMessage(uint8_t* pMsg)
 		ESP.restart();
 		break;
 	}
+	case ID_WIFI_PROFILING:
+		profiling = pMsg[3];
+		Serial.printf("profiling is set to: %d", profiling);
+		//send response to mcu
+		pMsg[0]=RESPONSE;
+		pMsg[2]=0;
+		//serialMcu.write(pMsg, 3+pMsg[2]); // now send to UART for Wifi :
+		break;
 	case ID_WIFI_RESTART:
 		ESP.restart();
 		break;
@@ -241,6 +262,13 @@ int ixCur = 0;
 uint32_t ixTimer=0;
 void loop()
 {
+	if(WiFi.status()!=WL_CONNECTED)
+		ESP.restart();
+	if(wasconnected && enableWifi && !client.connected()){
+		Serial.println("Server drop connection - trying to reconnect...");
+		connectToServer();
+		return;
+	}
 #ifdef OTA_HANDLER
 	ArduinoOTA.handle();
 #endif // OTA_HANDLER
@@ -265,12 +293,13 @@ void loop()
 		if (nBuf < bufferSize - 1) nBuf++;
 	}
 	//---- intercept and check for Punch message ---------
+	// ----- ignore if profiling --------
 	if ((msgsize + nBuf) > 64){//something is wrong!
 		Serial.println("msgsize>64");
 		memset(arMsg,0,sizeof(arMsg));
 		msgsize = 0;
 	}
-	if (nBuf > 0) {
+	if (!profiling && nBuf > 0) {
 		memcpy(&arMsg[msgsize], buf, nBuf);
 		msgsize += nBuf;
 	}

@@ -14,12 +14,15 @@ bool debug = true;
 #define DEF_IPSERVER IPAddress(192, 168, 1, 15) //host server
 #define DEF_PORTSERVER 9500
 #define DEF_ENABLEWIFI true
+#define DEF_CONNECT_TIMEOUT	20000 //connect to server timeout. todo - change to longer for release
 IPAddress netmask(255, 255, 255, 0);
 String ssid = DEF_SSID; //host wifi
 String password = DEF_PASSWORD;//host wifi
 IPAddress ipServer = DEF_IPSERVER;//host wifi
 uint16_t portServer =  DEF_PORTSERVER ;
 bool enableWifi = DEF_ENABLEWIFI;
+bool wasconnected = false;
+bool profiling = false;//todo main can send a msg for this flag.
 
 #define COMMAND 0xC0
 #define RESPONSE 0xD0
@@ -33,7 +36,8 @@ bool enableWifi = DEF_ENABLEWIFI;
 #define ID_WIFI_GET_IP_PORT  		0x26		//return 4 bytes ipAddr, 2 byte port#
 // 
 #define ID_WIFI_ENABLE				0x27 //disable wifi, just use usart to communicate with main mcu for messaging.
-#define ID_WIFI_RESTART				0x28 //reset me - not use yet
+#define ID_WIFI_PROFILING			0x28 //todo - mcu set the profiling flag
+#define ID_WIFI_RESTART				0x29 //reset me - not use yet
 /*************************  COM Port 0 *******************************/
 // Doit Kit:COM2<-->CP210x (jumper (pc COM5)):tobe connect to MCU ---
 #define UART_BAUD0 115200           // Baudrate UART2
