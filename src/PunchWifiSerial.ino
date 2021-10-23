@@ -265,6 +265,7 @@ void loop()
 	if(wasconnected && WiFi.status()!=WL_CONNECTED){
 		Serial.println("Restart from loop");
 		ESP.restart();
+		return;
 	}
 	if(wasconnected && enableWifi && !client.connected()){
 		Serial.println("Server drop connection - trying to reconnect...");
@@ -316,10 +317,12 @@ void loop()
 					memset(arMsg,0,sizeof(arMsg));
 					msgsize = 0;
 					serialMcu.flush();
+					nBuf = 0;
 					return;//do not pass on to wifi
 				}
 				//get next byte until arMsg[2]==datasize
 				Serial.printf("2:got msgid msgsize=%d...wait for data\r\n",msgsize);
+				nBuf = 0;
 				return;//do not pass on to wifi
 			}
 			else {
@@ -327,17 +330,19 @@ void loop()
 				memset(arMsg,0,sizeof(arMsg));
 				Serial.println("4: bad or unknown msg");
 				serialMcu.flush();
+				nBuf = 0;
 				return;
 			}
 		}
 		//else	msgsize=0;
 		Serial.println("5:wait for data");
-		delay(10);
+		delay(20);
 		if(ixTimer++ > 10){//reset msg
 			memset(arMsg,0,sizeof(arMsg));
 			msgsize = 0;
 			ixTimer = 0;
 			serialMcu.flush();
+			nBuf = 0;
 			Serial.println("recv msg timeout - reset");
 		}
 		return;//do not pass on to wifi
