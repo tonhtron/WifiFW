@@ -9,7 +9,7 @@
 #endif // OTA_HANDLER
 
 //-----------------------------------------------------
-#define wifi_max_try 10             // Number of try
+#define wifi_max_try 15             // Number of try
 #define duration_deep_sleep 10      // Sleep until next try
 
 Preferences preferences;//save none-volatile data
@@ -110,8 +110,8 @@ void setup() {
 			// Sorry but wifi is not available 
 			Serial.println("\n");
 			Serial.println("Impossible to establish WiFi connection.");
-		Serial.println("...accepting messages from main mcu...");
-		return;
+		//Serial.println("...accepting message from main mcu...");
+		//return;
 			print_wifi_error();
 			Serial.println("Sleep a little and retry later, bye.");
 
@@ -125,7 +125,7 @@ void setup() {
 	Serial.printf("Connected to network, my IP address: "); Serial.println(WiFi.localIP());
 
 	if(!connectToServer()){
-		Serial.println("...accepting messages from main mcu(USB)-no pass thru...");
+		Serial.println("...accepting message from main mcu(USB)-no pass thru...");
 		return;//put into usart rev msg mode-no passthru.
 	}
 	wasconnected = true;
@@ -262,8 +262,10 @@ int ixCur = 0;
 uint32_t ixTimer=0;
 void loop()
 {
-	if(WiFi.status()!=WL_CONNECTED)
+	if(wasconnected && WiFi.status()!=WL_CONNECTED){
+		Serial.println("Restart from loop");
 		ESP.restart();
+	}
 	if(wasconnected && enableWifi && !client.connected()){
 		Serial.println("Server drop connection - trying to reconnect...");
 		connectToServer();

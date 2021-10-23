@@ -11,7 +11,7 @@ bool debug = true;
 
 #define DEF_SSID    "eMedia Net_EXT" //host wifi AP
 #define DEF_PASSWORD "thanhtruong"//host wifi AP
-#define DEF_IPSERVER IPAddress(192, 168, 1, 15) //host server
+#define DEF_IPSERVER IPAddress(192, 168, 1, 10) //host server
 #define DEF_PORTSERVER 9500
 #define DEF_ENABLEWIFI true
 #define DEF_CONNECT_TIMEOUT	20000 //connect to server timeout. todo - change to longer for release

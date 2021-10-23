@@ -1,60 +1,50 @@
-# Modification for Punch Hardware
-Note: this is a quick and duty solution. Will update to add a Web Server for configuration similiar to
-https://github.com/jeelabs/esp-link (currently it only support ESP8266 mcu) - wait or spend time to port it.
-
+# ESP32 wifi module for Punch HW project
 =====================================
 
-192.168.4.1:8885  <-> COM2 (default)
+## ESP32-Serial-Bridge
+Transparent WiFi (TCP) to UART Bridge, supports STATION WiFi modes. The .ino file is the code for the ESP32. Use PlatformIO and VSCode IDE for ESP32 to compile and upload it to the ESP32.
+
+### Tools to build and upload
+* Visual studio and PlatformIO extenion.
+	* In VC/PlatformIO Home, add library espressif8266 or espressif32
+	* Open the Wifi project/folder that you checked out from gif.
+* Hardware Connectivity <todo>
+	* punch usb <--> PC
+	* punch wifi esp32 uart <--> cp2102 usb-uart convertor <--> PC (figure1)
+	* connect the boot pins together then upload vs. VSCode. Remember to reset the HW.
+	* click Upload button in the PlatformIO toolbar
+	* disconnect eh boot pins. reset.
+
+figure 1:								___ usb
+							 ` Tx		___
+					mainmcu	 ` Rx	>reverse on other end(cp2102)
+							 ` Gnd
+		`  esp boot					_______
+		`							| mcu |
+					' macimcu boot	|_f103|
+espmcu	` Rx		'						
+		` Tx	>reverse on other end(cp2102)
+		` Gnd
 
 
-((((((((((((((((( Original )))))))))))))))))
-# ESP32-Serial-Bridge
+## Api interface and note
+* When reset, it  trying to connect to the host server listening on the following connection/port. It will timeout in 20 second and go to USB only mode. 
 
-Transparent WiFi (TCP) to all three UART Bridge, supports both AP and STATION WiFi modes. The .ino file is the code for the ESP32. Use Arduino IDE for ESP32 to compile and upload it to the ESP32.
-I made this project in order to connect Flight equipment devices devices like (Radio, Vario FLARM), to a Flight Computer (Kobo, Smartphones etc.),  but it is not limited to that. You can use it wherever you want, but on your own risk. Read license file for more details.
-Accesspoint                                                    
-IPAdress: 192.168.4.1                                           
-AP SSID: LK8000                                                   
-AP Password: Flightcomputer                                       
-Used Ports:                                                                                                          
-192.168.4.1:8880  <-> COM0                                     
-192.168.4.1:8881  <-> COM1                                     
-192.168.4.1:8882  <-> COM2                                     
+use the SampleApp to modify them: 
+Accesspoint (modifiable thru Punch's api sample app):
+AP SSID: eMediat NET_EXT
+AP Password: thanhtruong
+IPAdress: 192.168.1.10:9500 <-> STM32F103RB mcu COM2
+
+* Modify connection infor:
+	* Power on Punch HW (wait for 20 second for it go into USB mode)
+	* Launch SampleApp
+	* execute OpenDevice on the COMx port that Punch HW connective to.
+	* execute all/some of the Wifi api (bottom of the list)
+	* reset HW
+	* API: CloseDevice then OpenDevice in TCP mode with the connction's infor. set above.
+	* Now you are communication with Punch HW in Wifi-mode (and USB is active if you want to monitor with other serial app)
+
 
 ===============================================================
-
-Used Libraries: (must be installed in the arduino IDE):
-
-https://github.com/espressif/arduino-esp32
-
-
-===============================================================
-
-In some cases the memorylayout is to small for this scetch,
-change the partition size as described here:
-https://desire.giesecke.tk/index.php/2018/04/20/change-partition-size-arduino-ide/
-
-Arduino hardware configuration:
-
-https://github.com/AlphaLima/ESP32-Serial-Bridge/blob/master/Settings.jpg
-
-===============================================================
-
-# Hardware
-here is the wiring diagram recomendation:
-https://raw.githubusercontent.com/AlphaLima/ESP32-Serial-Bridge/master/ESP32-SerialBridge.jpg             
-Pinning                                                                                     
-COM0 Rx <-> GPIO21                                                                               
-COM0 Tx <-> GPIO01                                                                                 
-COM1 Rx <-> GPIO16                                                                               
-COM1 Tx <-> GPIO17                                                                              
-COM2 Rx <-> GPIO15                                                                               
-COM2 Tx <-> GPIO04                                                                              
-
-NOTE: The PIN assignment has changed and may not look straigt forward (other PINs are marke as Rx/Tx), but this assignment allows to flash via USB also with hooked MAX3232 serial drivers.
-
-I recomend to start your project with a Node32s or compatible evaluation board. For a TTL to RS232 level conversion search google for "TTL RS3232 Converter"
-
-https://tech.scargill.net/wp-content/uploads/2017/05/ESP326.jpg
-
 
