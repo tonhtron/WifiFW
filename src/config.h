@@ -24,8 +24,8 @@ bool enableWifi = DEF_ENABLEWIFI;
 bool wasconnected = false;
 bool profiling = false;//todo main can send a msg for this flag.
 
-#define COMMAND 0xC0
-#define RESPONSE 0xD0
+#define WCOMMAND 	0xC1		//command from f1023rb mcu
+#define WRESPONSE 	0xD1		//response to f103rb mcu
 // message from mcu ----------------------
 #define	ID_WIFI_SET_REMOTE_AP_SSID 	0x21 //set 30 bytes ssid, including NULL
 #define	ID_WIFI_GET_REMOTE_AP_SSID 	0x22//return 30 bytes ssid, including NULL

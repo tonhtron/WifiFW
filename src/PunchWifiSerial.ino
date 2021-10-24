@@ -174,7 +174,7 @@ void setup() {
 
 bool ExecMessage(uint8_t* pMsg)
 {
-	if (pMsg[0] != 0xC0) return false;
+	if (pMsg[0] != WCOMMAND) return false;
 	Serial.printf("ExecMessage: data size %u\r\n",(uint8_t)pMsg[2]);
 	switch (pMsg[1]) {
 	//all setting require a reset/reboot **************
@@ -182,7 +182,7 @@ bool ExecMessage(uint8_t* pMsg)
 		pMsg[3+30]=0;
 		ssid = (char*)&pMsg[3];	
 		//send response to mcu
-		pMsg[0]=RESPONSE;
+		pMsg[0]=WRESPONSE;
 		pMsg[2]=0;
 		//serialMcu.write(pMsg, 3+pMsg[2]); // now send to UART for Wifi :
 		preferences.begin("Punch", false);
@@ -196,7 +196,7 @@ bool ExecMessage(uint8_t* pMsg)
 		pMsg[3+25]=0;
 		password = (char*)&pMsg[3];	
 		//send response to mcu
-		pMsg[0]=RESPONSE;
+		pMsg[0]=WRESPONSE;
 		pMsg[2]=0;
 		//serialMcu.write(pMsg, 3+pMsg[2]); // now send to UART for Wifi :
 		preferences.begin("Punch", false);
@@ -210,7 +210,7 @@ bool ExecMessage(uint8_t* pMsg)
 		ipServer = *(uint32_t*)&pMsg[3];
 		portServer = *(uint16_t*)&pMsg[7];
 		//send response to mcu
-		pMsg[0]=RESPONSE;
+		pMsg[0]=WRESPONSE;
 		pMsg[2]=0;
 		//serialMcu.write(pMsg, 3+pMsg[2]); // now send to UART for Wifi :
 		preferences.begin("Punch", false);
@@ -231,7 +231,7 @@ bool ExecMessage(uint8_t* pMsg)
 		preferences.putBool("enableWifi", enableWifi);
 		preferences.end();
 		//send response to mcu
-		pMsg[0]=RESPONSE;
+		pMsg[0]=WRESPONSE;
 		pMsg[2]=0;
 		//serialMcu.write(pMsg, 3+pMsg[2]); // now send to UART for Wifi :
 		preferences.begin("Punch", false);
@@ -245,7 +245,7 @@ bool ExecMessage(uint8_t* pMsg)
 		profiling = pMsg[3];
 		Serial.printf("profiling is set to: %d", profiling);
 		//send response to mcu
-		pMsg[0]=RESPONSE;
+		pMsg[0]=WRESPONSE;
 		pMsg[2]=0;
 		//serialMcu.write(pMsg, 3+pMsg[2]); // now send to UART for Wifi :
 		break;
@@ -260,6 +260,7 @@ bool ExecMessage(uint8_t* pMsg)
 
 int ixCur = 0;
 uint32_t ixTimer=0;
+//******************************************************************************
 void loop()
 {
 	if(wasconnected && WiFi.status()!=WL_CONNECTED){
@@ -275,9 +276,9 @@ void loop()
 #ifdef OTA_HANDLER
 	ArduinoOTA.handle();
 #endif // OTA_HANDLER
-	//===== UART <-- Wifie TCP ===========
-	// COM[0](MCU), COM[1] (debug output)
+	//
 	//=== Wifi(Punch App) ---> MCU UART0 ===
+	//
 	while (client.available())
 	{
 		buf[nBuf] = client.read(); // read char from TCP Wifi client
@@ -306,8 +307,8 @@ void loop()
 		memcpy(&arMsg[msgsize], buf, nBuf);
 		msgsize += nBuf;
 	}
-	if (msgsize > 0 && arMsg[0] == 0xC0) {
-		Serial.printf("1:got cmd 0xC0 msgsize=%d\r\n",msgsize);
+	if (msgsize > 0 && arMsg[0] == WCOMMAND) {
+		Serial.printf("1:got cmd 0xC1 msgsize=%d\r\n",msgsize);
 		if (msgsize > 1){
 			if((arMsg[1] == ID_WIFI_SET_REMOTE_AP_SSID || arMsg[1] == ID_WIFI_SET_REMOTE_AP_PW ||
 							arMsg[1] == ID_WIFI_SET_IP_PORT || arMsg[1] == ID_WIFI_ENABLE)) {
