@@ -258,6 +258,7 @@ bool ExecMessage(uint8_t* pMsg)
 	return true;
 }
 
+int ixCur = 0;
 uint32_t ixTimer=0;
 //******************************************************************************
 void loop()
@@ -281,12 +282,11 @@ void loop()
 	while (client.available())
 	{
 		buf[nBuf] = client.read(); // read char from TCP Wifi client
-		//Serial.printf("%X ", buf[nBuf]);
 		if (nBuf < bufferSize - 1)
 			nBuf++;
 	}
 	//---------------------------------------------------------
-	serialMcu.write(buf, nBuf); // now send to UART from Wifi :
+	serialMcu.write(buf, nBuf); // now send to UART for Wifi :
 	nBuf = 0;
 	//
 	//=== MCU UART0 ---> Wifi(Punch App)==========================
@@ -294,9 +294,7 @@ void loop()
 	while (serialMcu.available())
 	{
 		buf[nBuf] = serialMcu.read(); // read char from UART
-		//Serial.printf("%x ", buf[nBuf]);
-		if (nBuf < bufferSize - 1) 
-			nBuf++;
+		if (nBuf < bufferSize - 1) nBuf++;
 	}
 	//---- intercept and check for Punch message ---------
 	// ----- ignore if profiling --------
@@ -310,12 +308,12 @@ void loop()
 		msgsize += nBuf;
 	}
 	if (msgsize > 0 && arMsg[0] == WCOMMAND) {
-		Serial.printf("\r\n1:got cmd 0xC1 msgsize=%d  %X %X %X\r\n",msgsize, arMsg[0],arMsg[1],arMsg[2]);
+		Serial.printf("1:got cmd 0xC1 msgsize=%d\r\n",msgsize);
 		if (msgsize > 1){
 			if((arMsg[1] == ID_WIFI_SET_REMOTE_AP_SSID || arMsg[1] == ID_WIFI_SET_REMOTE_AP_PW ||
 							arMsg[1] == ID_WIFI_SET_IP_PORT || arMsg[1] == ID_WIFI_ENABLE)) {
 				if (msgsize > 2 && msgsize >= arMsg[2] + 3) {
-					Serial.printf("3:Got Wifi msgsize=%d MsgId=0x%x data=%u\r\n",msgsize,arMsg[1],arMsg[2]);
+					Serial.printf("3:Got Wifi msgsize=%d MsgId=0x%x data=%u count=%d\r\n",msgsize,arMsg[1],arMsg[2],ixCur++);
 					ExecMessage(arMsg);
 					memset(arMsg,0,sizeof(arMsg));
 					msgsize = 0;
@@ -329,9 +327,9 @@ void loop()
 				return;//do not pass on to wifi
 			}
 			else {
-				Serial.printf("4: bad or unknown msg 0x%X", arMsg[1]);				
 				msgsize=0;
 				memset(arMsg,0,sizeof(arMsg));
+				Serial.println("4: bad or unknown msg");
 				serialMcu.flush();
 				nBuf = 0;
 				return;
@@ -339,8 +337,8 @@ void loop()
 		}
 		//else	msgsize=0;
 		Serial.println("5:wait for data");
-		delay(10);
-		if(ixTimer++ > 20){//reset msg
+		delay(20);
+		if(ixTimer++ > 10){//reset msg
 			memset(arMsg,0,sizeof(arMsg));
 			msgsize = 0;
 			ixTimer = 0;
